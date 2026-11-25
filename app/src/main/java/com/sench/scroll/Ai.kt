@@ -40,6 +40,8 @@ object Ai {
                     try { call(p, key, "gemini-flash-lite-latest", system, text, imgs, json) }
                     catch (e2: AiException) { if (isModelGone(e2)) throw e else throw e2 }
                 }
+                // Groq и другие отклоняют ответ, если модель ошиблась в строгом JSON — просим без строгого режима
+                json && isJsonModeFail(e) -> call(p, key, model, system, text, imgs, false)
                 imgs.isNotEmpty() && isNoVision(e) -> {
                     noVision += p.id
                     call(p, key, model, system, text, emptyList(), json)
@@ -51,6 +53,9 @@ object Ai {
 
     private fun isModelGone(e: AiException) = e.code == 404 ||
         (e.code == 400 && Regex("(?i)model.{0,40}(not.?found|does not exist|decommission|deprecated|invalid|unknown)").containsMatchIn(e.message ?: ""))
+
+    private fun isJsonModeFail(e: AiException) = e.code in 400..422 &&
+        Regex("(?i)(failed to generate json|failed_generation|json_validate|response_format|valid json)").containsMatchIn(e.message ?: "")
 
     private fun isNoVision(e: AiException) = e.code in 400..422 &&
         Regex("(?i)(image|vision|multimodal|content.{0,20}string)").containsMatchIn(e.message ?: "")

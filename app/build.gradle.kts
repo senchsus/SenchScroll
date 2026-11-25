@@ -13,8 +13,8 @@ android {
         applicationId = "com.sench.scroll"
         minSdk = 26
         targetSdk = 36
-        versionCode = 9
-        versionName = "1.8"
+        versionCode = 10
+        versionName = "1.9"
     }
     // Ключ подписи хранится только у автора (в репозиторий не попадает).
     // F-Droid собирает без него и подписывает своим ключом.

@@ -1,0 +1,1 @@
+Fixed: Groq sometimes rejected answers with "Failed to generate JSON" — the app now retries automatically.
