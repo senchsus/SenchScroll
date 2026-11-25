@@ -221,7 +221,9 @@ class ScrollService : AccessibilityService() {
             }
 
             // в журнал
+            val likes = ScreenReader.likeCount(nodes, w, h)
             val e = Entry(
+                likes = likes ?: -1,
                 n = count, time = System.currentTimeMillis(),
                 raw = (if (photo) "[ФОТО-ПОСТ / СЛАЙДШОУ: несколько фото под музыку, это не видео]\n" else "") +
                     ScreenReader.forAi(lines, noise.noise(lines)),
@@ -234,7 +236,10 @@ class ScrollService : AccessibilityService() {
             Journal.addEntry(sid, e)
             AiQueue.kick()
 
-            if (count < cfg.videos) { setStatus("Листаю дальше ⬆"); swipe(); swipes++ }
+            if (count < cfg.videos) {
+                if (imeOpen()) { Steps.add("Клавиатура открыта — закрываю перед свайпом"); closeKeyboard() }
+                setStatus("Листаю дальше ⬆"); swipe(); swipes++
+            }
             errors = 0
           } catch (e: kotlinx.coroutines.CancellationException) { throw e
           } catch (e: Exception) {
@@ -251,26 +256,57 @@ class ScrollService : AccessibilityService() {
 
     private suspend fun readComments(before: List<String>, beforeNodes: List<SNode>, w: Int, h: Int, deep: Boolean): String {
         val btn = ScreenReader.findCommentButton(beforeNodes, w, h) ?: return ""
-        if (ScreenReader.commentCount(btn) == 0) return ""
+        // комментов нет — даже не открываем (иначе TikTok сразу открывает клавиатуру)
+        if (ScreenReader.countNear(btn, beforeNodes, h) == 0) { Steps.add("Комментов нет — пропускаю"); return "" }
+        val hadEditable = beforeNodes.any { it.editable }
         tap(btn.cx.toFloat(), btn.cy.toFloat())
-        if (!pause(1800)) return ""
+        if (!pause(1800)) { closeComments(before, h, hadEditable); return "" }
+        // пустые комменты: TikTok ставит курсор в поле ввода и открывает клавиатуру — сразу закрываем
+        if (imeOpen()) { Steps.add("Открылась клавиатура — закрываю"); closeKeyboard() }
         var after = snapshot()
         val got = LinkedHashSet(ScreenReader.newLines(before, after, h))
-        if (!ScreenReader.commentsOpened(got.toList(), after, h)) return ""
-        if (deep) {
+        if (ScreenReader.commentsOpened(got.toList(), after, h) && deep) {
             swipe(fromY = 0.82f, toY = 0.42f)
             if (pause(1400)) {
+                if (imeOpen()) closeKeyboard()
                 after = snapshot(); got += ScreenReader.newLines(before, after, h)
             }
         }
-        performGlobalAction(GLOBAL_ACTION_BACK)
-        pause(900)
-        // если окно комментов всё ещё открыто — закрываем ещё раз
-        val check = snapshot()
-        if (fg().let { it == null || it == pkg } && check.any { it.editable && it.cy > h * 0.6 } && ScreenReader.newLines(before, check, h).size >= 3) {
-            performGlobalAction(GLOBAL_ACTION_BACK); pause(700)
-        }
+        closeComments(before, h, hadEditable)
         return got.joinToString("\n")
+    }
+
+    /** Есть ли на экране клавиатура. */
+    private suspend fun imeOpen(): Boolean = kotlinx.coroutines.withTimeoutOrNull(1500) {
+        withContext(Dispatchers.Default) {
+            try { windows.any { it.type == android.view.accessibility.AccessibilityWindowInfo.TYPE_INPUT_METHOD } } catch (_: Exception) { false }
+        }
+    } ?: false
+
+    private suspend fun closeKeyboard() {
+        repeat(2) { if (imeOpen()) { performGlobalAction(GLOBAL_ACTION_BACK); pause(500) } }
+    }
+
+    /**
+     * Закрыть окно комментов: сначала клавиатуру, потом само окно. Нажимаем «назад» только пока
+     * видим клавиатуру или окно комментов, чтобы случайно не выйти из TikTok.
+     */
+    private suspend fun closeComments(before: List<String>, h: Int, hadEditable: Boolean) {
+        repeat(4) {
+            if (fg().let { it != null && it != pkg }) return@repeat
+            if (imeOpen()) { performGlobalAction(GLOBAL_ACTION_BACK); pause(600); return@repeat }
+            val now = snapshot()
+            val sheet = (!hadEditable && now.any { it.editable && it.cy > h * 0.5 }) || ScreenReader.newLines(before, now, h).size >= 2
+            if (!sheet) return
+            performGlobalAction(GLOBAL_ACTION_BACK); pause(800)
+        }
+        // если «назад» всё-таки выкинул из TikTok — возвращаемся
+        val f = fg()
+        if (f != null && f != pkg) {
+            Steps.add("Вылетел из TikTok ($f) — возвращаюсь")
+            packageManager.getLaunchIntentForPackage(pkg)?.let { it.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK); startActivity(it) }
+            pause(2000)
+        }
     }
 
     // ---------------------------------------------------------------- ожидание и пауза

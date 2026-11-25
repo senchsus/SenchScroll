@@ -80,8 +80,28 @@ object ScreenReader {
         }.minByOrNull { it.area }
 
     /** Сколько комментов написано на кнопке (null — не понятно). */
-    fun commentCount(n: SNode): Int? {
-        for (s in listOf(n.desc, n.text)) {
+    fun commentCount(n: SNode): Int? = parseCount(n.desc) ?: parseCount(n.text)
+
+    /** Сколько на кнопке, а если на ней нет числа — число прямо под ней (так TikTok часто рисует счётчики). */
+    fun countNear(btn: SNode, nodes: List<SNode>, h: Int): Int? =
+        commentCount(btn) ?: nodes.filter { n ->
+            n !== btn && onlyCounter.matches(clean(n.text.ifBlank { n.desc })) &&
+                n.t >= btn.b - 12 && n.t <= btn.b + (h * 0.05).toInt() && kotlin.math.abs(n.cx - btn.cx) < btn.w
+        }.minByOrNull { it.t }?.let { parseCount(it.text.ifBlank { it.desc }) }
+
+    private val likeRx = rx("""(like|нрав|лайк|gefällt|curtir|j'aime|me gusta)""")
+
+    /** Кнопка лайка — справа, над кнопкой комментов. */
+    fun likeCount(nodes: List<SNode>, w: Int, h: Int): Int? {
+        val btn = nodes.filter { n ->
+            !n.editable && (likeRx.containsMatchIn(n.desc) || likeRx.containsMatchIn(n.text)) &&
+                n.cx > w * 0.6 && n.cy > h * 0.2 && n.cy < h * 0.9 && n.h in 1..(h * 0.15).toInt() && n.w in 1..(w * 0.3).toInt()
+        }.minByOrNull { it.area } ?: return null
+        return countNear(btn, nodes, h)
+    }
+
+    fun parseCount(s0: String): Int? {
+        for (s in listOf(s0)) {
             val m = numRx.find(s) ?: continue
             val raw = m.groupValues[1]
             val suffix = m.groupValues[2].lowercase().trimEnd('.')

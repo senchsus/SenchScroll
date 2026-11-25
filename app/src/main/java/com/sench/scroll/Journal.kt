@@ -25,6 +25,8 @@ data class Entry(
     val category: String = "",
     val vibe: String = "",
     val names: String = "",         // названия и имена: игры, песни, люди
+    val likes: Int = -1,             // лайков на видео (-1 — не удалось прочитать)
+    val aiHype: Int = 0,             // оценка нейронки до смешивания с лайками
     val hype: Int = 0,
     val isAd: Boolean = false,
 ) {
@@ -32,7 +34,7 @@ data class Entry(
         put("n", n); put("time", time); put("raw", raw); put("rawComments", rawComments)
         put("frames", frames); put("shots", shots); put("thumb", thumb); put("status", status); put("error", error)
         put("author", author); put("headline", headline); put("about", about); put("comments", comments)
-        put("bestComment", bestComment); put("category", category); put("vibe", vibe); put("names", names); put("hype", hype)
+        put("bestComment", bestComment); put("category", category); put("vibe", vibe); put("names", names); put("likes", likes); put("aiHype", aiHype); put("hype", hype)
         put("isAd", isAd)
     }
 
@@ -50,7 +52,8 @@ data class Entry(
         bestComment = "",
         category = Clean.text(str("category")).lowercase().take(20),
         vibe = str("vibe").trim().take(8),
-        hype = o.optInt("hype", 5).coerceIn(1, 10),
+        aiHype = o.optInt("hype", 5).coerceIn(1, 10),
+        hype = Hype.blend(o.optInt("hype", 5).coerceIn(1, 10), likes),
         isAd = o.optBoolean("is_ad", false),
     )
     }
@@ -66,6 +69,7 @@ data class Entry(
             author = o.optString("author"), headline = o.optString("headline"), about = o.optString("about"),
             comments = o.optString("comments"), bestComment = o.optString("bestComment"),
             category = o.optString("category"), vibe = o.optString("vibe"), names = o.optString("names"), hype = o.optInt("hype"),
+            likes = o.optInt("likes", -1), aiHype = o.optInt("aiHype"),
             isAd = o.optBoolean("isAd"),
         )
     }
@@ -214,4 +218,21 @@ object Fmt {
             "${two(c.get(java.util.Calendar.HOUR_OF_DAY))}:${two(c.get(java.util.Calendar.MINUTE))}"
     }
     fun dur(ms: Long): String { val s = (ms / 1000).coerceAtLeast(0); return if (s >= 60) "${s / 60} мин ${s % 60} с" else "$s с" }
+}
+
+/** Имба-метр: половина — мнение нейронки, половина — реальные лайки. */
+object Hype {
+    /** Лайки в шкалу 1–10: 300 → 3, 3 тыс. → 5, 30 тыс. → 6–7, 300 тыс. → 8, 3 млн → 9–10. */
+    fun fromLikes(likes: Int): Int =
+        Math.round(1.5 * kotlin.math.log10(likes.toDouble() + 1) - 0.5).toInt().coerceIn(1, 10)
+
+    fun blend(ai: Int, likes: Int): Int =
+        if (likes < 0) ai else Math.round((ai + fromLikes(likes)) / 2.0).toInt().coerceIn(1, 10)
+
+    fun short(likes: Int): String = when {
+        likes < 0 -> ""
+        likes >= 1_000_000 -> "%.1f млн".format(likes / 1_000_000.0).replace(".0 ", " ")
+        likes >= 1_000 -> "${likes / 1000} тыс."
+        else -> "$likes"
+    }
 }

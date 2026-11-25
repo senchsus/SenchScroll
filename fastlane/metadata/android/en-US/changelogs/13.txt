@@ -1,0 +1,1 @@
+Keyboard no longer opens on videos without comments and is closed before swiping. Fairer hype score: strict scale plus real likes.

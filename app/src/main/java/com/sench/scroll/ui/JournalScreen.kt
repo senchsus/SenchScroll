@@ -185,7 +185,7 @@ fun EntryCard(e: Entry, onReport: (Entry) -> Unit = {}) {
                             if (e.isAd) Tag("реклама", C.cyan)
                         }
                         Spacer(Modifier.height(6.dp))
-                        HypeBar(e.hype)
+                        HypeBar(e.hype, e.likes)
                     }
                 }
             }

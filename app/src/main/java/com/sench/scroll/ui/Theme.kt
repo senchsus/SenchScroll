@@ -225,10 +225,11 @@ fun StatusRow(title: String, value: String, good: Boolean, action: String? = nul
 
 /** Шкала «имба-метр» из 10 делений. */
 @Composable
-fun HypeBar(v: Int) {
+fun HypeBar(v: Int, likes: Int = -1) {
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(2.dp)) {
         Text("ИМБА-МЕТР ", color = C.sub, fontFamily = Mono, fontSize = 10.sp)
         repeat(10) { i -> Box(Modifier.size(width = 7.dp, height = 10.dp).background(if (i < v) C.red else C.line)) }
         Text(" $v/10", color = C.text, fontFamily = Mono, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+        if (likes >= 0) Text("  ❤ " + com.sench.scroll.Hype.short(likes), color = C.sub, fontFamily = Mono, fontSize = 10.sp)
     }
 }

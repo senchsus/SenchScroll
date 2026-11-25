@@ -108,4 +108,24 @@ class ScreenReaderTest {
         assertTrue(l.contains("@trip"))
         assertEquals(15, ScreenReader.commentCount(ScreenReader.findCommentButton(nodes, W, H)!!))
     }
+
+    @Test fun likesAndZeroComments() {
+        assertEquals(52100, ScreenReader.likeCount(feed("@a", "видео"), W, H))
+        // счётчик отдельной строкой под кнопкой
+        val nodes = listOf(
+            SNode("", "Нравится", 960, 1200, 1060, 1300, clickable = true), SNode("1,2 млн", "", 960, 1300, 1060, 1340),
+            SNode("", "Комментарии", 960, 1400, 1060, 1500, clickable = true), SNode("0", "", 960, 1500, 1060, 1540),
+        )
+        assertEquals(1200000, ScreenReader.likeCount(nodes, W, H))
+        val btn = ScreenReader.findCommentButton(nodes, W, H)!!
+        assertEquals(0, ScreenReader.countNear(btn, nodes, H))
+    }
+
+    @Test fun hypeSpreads() {
+        assertEquals(3, Hype.fromLikes(300))
+        assertEquals(10, Hype.fromLikes(5_000_000))
+        assertTrue(Hype.blend(7, 300) < Hype.blend(7, 2_000_000))
+        assertEquals(7, Hype.blend(7, -1))
+        assertEquals("52 тыс.", Hype.short(52100))
+    }
 }
