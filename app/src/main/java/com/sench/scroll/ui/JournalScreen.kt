@@ -191,6 +191,10 @@ fun EntryCard(e: Entry, onReport: (Entry) -> Unit = {}) {
             }
         }
         if (e.status == "done") {
+            if (e.names.isNotBlank()) {
+                Spacer(Modifier.height(10.dp))
+                Text("🏷 " + e.names, color = C.red, fontFamily = Mono, fontSize = 12.sp, lineHeight = 17.sp, fontWeight = FontWeight.Bold)
+            }
             Spacer(Modifier.height(10.dp))
             Text(e.about, color = C.text, fontSize = 14.sp, lineHeight = 20.sp)
             if (e.comments.isNotBlank()) {

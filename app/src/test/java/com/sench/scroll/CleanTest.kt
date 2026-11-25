@@ -52,4 +52,13 @@ class CleanTest {
         val u = Prompts.videoUser(e, 0)
         assertTrue(u.contains("- крутое видео")); assertFalse(u.contains("vasya_1")); assertFalse(u.contains("Ответить"))
     }
+
+    @Test fun namesAreKept() {
+        val o = org.json.JSONObject("""{"headline":"Тир-лист пушек ROB RUN","about":"Автор ранжирует пушки в ROB RUN, на первом месте дробовик.","names":"ROB RUN, Павел Дуров"}""")
+        val e = Entry(1, 0).withNote(o)
+        assertEquals("ROB RUN, Павел Дуров", e.names)
+        val arr = Entry(2, 0).withNote(org.json.JSONObject("""{"about":"Текст.","names":["Fortnite","Drake"]}"""))
+        assertEquals("Fortnite, Drake", arr.names)
+        assertTrue(Prompts.videoSystem(Config()).contains("\"names\""))
+    }
 }

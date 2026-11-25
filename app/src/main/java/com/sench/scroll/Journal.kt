@@ -24,6 +24,7 @@ data class Entry(
     val bestComment: String = "",
     val category: String = "",
     val vibe: String = "",
+    val names: String = "",         // названия и имена: игры, песни, люди
     val hype: Int = 0,
     val isAd: Boolean = false,
 ) {
@@ -31,7 +32,7 @@ data class Entry(
         put("n", n); put("time", time); put("raw", raw); put("rawComments", rawComments)
         put("frames", frames); put("shots", shots); put("thumb", thumb); put("status", status); put("error", error)
         put("author", author); put("headline", headline); put("about", about); put("comments", comments)
-        put("bestComment", bestComment); put("category", category); put("vibe", vibe); put("hype", hype)
+        put("bestComment", bestComment); put("category", category); put("vibe", vibe); put("names", names); put("hype", hype)
         put("isAd", isAd)
     }
 
@@ -44,6 +45,8 @@ data class Entry(
         headline = Clean.text(str("headline")).take(90).ifBlank { "Видео #$n" },
         about = Clean.text(str("about")).take(700),
         comments = Clean.text(str("comments")).take(500),
+        names = Clean.text(str("names").ifBlank { (o.optJSONArray("names")?.let { a -> (0 until a.length()).joinToString(", ") { a.optString(it) } }).orEmpty() })
+            .replace("\n", ", ").take(160),
         bestComment = "",
         category = Clean.text(str("category")).lowercase().take(20),
         vibe = str("vibe").trim().take(8),
@@ -62,7 +65,7 @@ data class Entry(
             status = o.optString("status", "pending"), error = o.optString("error"),
             author = o.optString("author"), headline = o.optString("headline"), about = o.optString("about"),
             comments = o.optString("comments"), bestComment = o.optString("bestComment"),
-            category = o.optString("category"), vibe = o.optString("vibe"), hype = o.optInt("hype"),
+            category = o.optString("category"), vibe = o.optString("vibe"), names = o.optString("names"), hype = o.optInt("hype"),
             isAd = o.optBoolean("isAd"),
         )
     }
@@ -195,6 +198,7 @@ object Journal {
         s.entries.filter { it.status == "done" }.forEach { e ->
             append("\n#").append(e.n).append(' ').append(e.vibe).append(' ').append(e.headline)
             if (e.author.isNotBlank()) append(" (").append(e.author).append(')')
+            if (e.names.isNotBlank()) append("\n🏷 ").append(e.names)
             append('\n').append(e.about)
             if (e.comments.isNotBlank()) append("\n💬 ").append(e.comments)
             append('\n')
