@@ -106,7 +106,8 @@ object AiQueue {
         for ((attempt, temp) in listOf(0.4, 0.15).withIndex()) {
             if (attempt > 0) { status.value = "ИИ ошибся, переспрашиваю про видео #${e.n}…"; delay(cfg.prov.gapMs) }
             val res = withRetry("видео #${e.n}") {
-                Ai.ask(cfg, Prompts.videoSystem(cfg), Prompts.videoUser(e, frames.size), frames, json = true, temp = temp)
+                Ai.ask(cfg, Prompts.videoSystem(cfg), Prompts.videoUser(e, frames.size), frames, json = true, temp = temp,
+                    textNoImages = Prompts.videoUser(e, 0))
             }
             val err = res.exceptionOrNull()
             if (err != null) {

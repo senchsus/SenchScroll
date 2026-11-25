@@ -28,10 +28,10 @@ object Providers {
             6500, listOf("flash-latest", "flash-lite-latest", "flash"),
         ),
         Provider(
-            "groq", "Groq · Llama", "openai", "https://api.groq.com/openai/v1",
-            "meta-llama/llama-4-scout-17b-16e-instruct", "https://console.groq.com/keys", true, true,
-            "Очень быстрый, бесплатный ключ. Модель Llama 4 видит кадры.",
-            2500, listOf("llama-4-scout", "llama-4", "llama-3.3-70b", "llama"),
+            "groq", "Groq", "openai", "https://api.groq.com/openai/v1",
+            "openai/gpt-oss-120b", "https://console.groq.com/keys", true, false,
+            "Очень быстрый, бесплатный ключ. Кадры НЕ видит — только текст: модели Groq со зрением отключены. Для кадров бери Gemini.",
+            2500, listOf("gpt-oss-120b", "llama-3.3-70b", "gpt-oss"),
         ),
         Provider(
             "mistral", "Mistral", "openai", "https://api.mistral.ai/v1",
@@ -134,7 +134,10 @@ object Store {
 
     fun init(ctx: Context) {
         appCtx = ctx.applicationContext
-        cfg.value = Config.fromJson(prefs()?.getString("cfg", null))
+        var c = Config.fromJson(prefs()?.getString("cfg", null))
+        val g = c.models["groq"].orEmpty()
+        if (g.contains("llama-4") || g.contains("llama-3.1-8b")) c = c.copy(models = c.models - "groq")
+        cfg.value = c
     }
 
     private fun prefs() = appCtx?.getSharedPreferences("sench", Context.MODE_PRIVATE)

@@ -18,4 +18,16 @@ class FramesTest {
         assertEquals(9, Config.fromJson(Config(shots = 9).toJson()).shots)
         assertEquals(6, Config.fromJson("{}").shots)
     }
+
+    @Test fun noFramesPromptDoesNotClaimStoryboard() {
+        val e = Entry(1, 0, raw = "x", frames = 1, shots = 6)
+        val noImg = Prompts.videoUser(e, 0)
+        assertTrue(noImg.contains("Кадров нет"))
+        assertTrue(!noImg.contains("раскадровка"))
+    }
+
+    @Test fun groqHasNoVision() {
+        assertTrue(!Providers.get("groq").vision)
+        assertEquals("openai/gpt-oss-120b", Providers.get("groq").model)
+    }
 }

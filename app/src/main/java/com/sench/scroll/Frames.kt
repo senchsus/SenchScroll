@@ -9,7 +9,7 @@ import android.graphics.Typeface
 
 /** Кадры видео: уменьшение и склейка в одну раскадровку с номерами. */
 object Frames {
-    const val CELL_W = 240
+    const val CELL_W = 360
 
     /** Обрезаем полоски интерфейса сверху и снизу и уменьшаем до ширины ячейки. */
     fun cell(full: Bitmap): Bitmap {

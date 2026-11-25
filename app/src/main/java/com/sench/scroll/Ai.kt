@@ -19,6 +19,7 @@ object Ai {
     suspend fun ask(
         cfg: Config, system: String, text: String,
         images: List<ByteArray> = emptyList(), json: Boolean = false, temp: Double = 0.4,
+        textNoImages: String? = null,
     ): String = withContext(Dispatchers.IO) {
         temperature = temp
         val p = cfg.prov
@@ -26,25 +27,27 @@ object Ai {
         if (key.isBlank()) throw AiException("Нет ключа для ${p.label} — вставь его в Настройках")
         val imgs = if (p.vision && p.id !in noVision) images else emptyList()
         var model = cfg.model(p)
+        // если картинки не уходят (нейронка их не видит) — не пишем ей, что они приложены
+        fun t(i: List<ByteArray>) = if (i.isEmpty() && images.isNotEmpty() && textNoImages != null) textNoImages else text
         try {
-            call(p, key, model, system, text, imgs, json)
+            call(p, key, model, system, t(imgs), imgs, json)
         } catch (e: AiException) {
             when {
                 isModelGone(e) -> {
                     val alt = discover(p, key) ?: throw AiException("Модель «$model» не найдена. Впиши другую в Настройках.", e.code)
                     model = alt
                     Store.update { c -> c.copy(models = c.models + (p.id to alt)) }
-                    call(p, key, model, system, text, imgs, json)
+                    call(p, key, model, system, t(imgs), imgs, json)
                 }
                 p.kind == "gemini" && e.code == 429 && !model.contains("lite") -> {
-                    try { call(p, key, "gemini-flash-lite-latest", system, text, imgs, json) }
+                    try { call(p, key, "gemini-flash-lite-latest", system, t(imgs), imgs, json) }
                     catch (e2: AiException) { if (isModelGone(e2)) throw e else throw e2 }
                 }
                 // Groq и другие отклоняют ответ, если модель ошиблась в строгом JSON — просим без строгого режима
-                json && isJsonModeFail(e) -> call(p, key, model, system, text, imgs, false)
+                json && isJsonModeFail(e) -> call(p, key, model, system, t(imgs), imgs, false)
                 imgs.isNotEmpty() && isNoVision(e) -> {
                     noVision += p.id
-                    call(p, key, model, system, text, emptyList(), json)
+                    call(p, key, model, system, t(emptyList()), emptyList(), json)
                 }
                 else -> throw e
             }
@@ -245,6 +248,14 @@ object Prompts {
 - НЕ копируй комментарии и подписи дословно, НЕ перечисляй комменты списком, НЕ пиши ники и имена комментаторов;
 - без символов @ # ; кавычек, звёздочек, скобок, ссылок и хэштегов;
 - в комментах обобщай: какое настроение, о чём спорят, над чем шутят, с чем соглашаются.
+ГЛАВНОЕ — КОНКРЕТИКА. Пиши факты из видео, а не общие слова:
+- рейтинг, тир-лист, топ или сравнение — назови, что на первом месте и что хуже всего;
+- гайд, совет, лайфхак — назови сам совет;
+- если видны итог, результат, счёт, цена, название игры, песни, товара или места — назови их;
+- шутка или мем — перескажи саму шутку или ситуацию так, чтобы было смешно без видео;
+- читай текст на кадрах (надписи, субтитры, таблицы, тир-листы) и используй его.
+ЗАПРЕЩЕНЫ пустые фразы: «в ролике показано», «сопровождается оригинальным звуком», «подано в лёгком стиле», «типичный вирусный клип», «быстрые смены кадров», «ролик выглядит как». Про музыку пиши, только если это известная песня и она важна для видео.
+Если кадров нет и из текста суть не понять — скажи об этом одним коротким предложением и не гадай.
 Пиши грамотно, только настоящими русскими словами, понятными предложениями. Каждое поле — обычная строка, не список и не объект.
 Ответ — строго один JSON без пояснений и без markdown, все поля короткие:
 {"author":"имя автора без @ или пусто","headline":"цепляющий заголовок до 7 слов","about":"3–4 предложения своими словами: что происходит в видео и в чём суть","comments":"2–3 предложения своими словами: общее настроение и главные мнения в комментах, или пусто, если комментов нет","category":"одно слово: юмор, игры, музыка, танцы, еда, животные, спорт, лайфстайл, обучение, новости, тренды, реклама или другое","vibe":"один эмодзи","hype":число от 1 до 10,"is_ad":true или false}
@@ -271,6 +282,7 @@ object Prompts {
 2) Строка «Топ-3:» и три лучших видео по одному короткому предложению (с номерами видео).
 3) Строка «Что обсуждают в комментах:» — одно предложение.
 4) Строка «Вайб ленты:» — эмодзи и пара слов.
+Пиши конкретно: называй, что именно было (игры, кто топ-1 в рейтингах, суть шуток, главные новости), без общих слов вроде «мемный вайб» и «лёгкий юмор».
 Всего до 900 символов.
 """.trim()
 

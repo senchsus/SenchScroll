@@ -1,0 +1,1 @@
+More specific descriptions, larger frames so on-screen text is readable, Groq defaults to gpt-oss-120b, fixed "frames not visible" text for non-vision AI.

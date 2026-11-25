@@ -441,7 +441,7 @@ class ScrollService : AccessibilityService() {
         if (frames.isEmpty()) return@withContext 0
         // одна картинка-раскадровка = один запрос к ИИ, сколько бы кадров ни было
         val sheet = Frames.sheet(frames)
-        File(dir, "${sid}_${n}_0.jpg").writeBytes(jpeg(sheet, 1080, 72))
+        File(dir, "${sid}_${n}_0.jpg").writeBytes(jpeg(sheet, 1092, 75))
         if (sheet !== frames.first()) sheet.recycle()
         1
     }
