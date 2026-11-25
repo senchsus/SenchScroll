@@ -1,0 +1,26 @@
+SenchScroll scrolls your short-video feed for you and writes a readable journal. The app interface is in Russian.
+
+Press "Start", put your phone down, and the app scrolls the feed by itself, opening and reading the comments. For every video an AI writes:
+• what the video is about, in its own words;
+• what people think in the comments overall;
+• a category, a mood and a hype score from 1 to 10.
+
+At the end of the session the AI sums up the whole feed: topics, top-3 videos and the overall vibe.
+
+<b>Features</b>
+• Storyboard: up to 9 frames per video are stitched into one image, so each video takes only one AI request.
+• Ads and live streams are skipped.
+• Human-like timing and swipes.
+• Floating pause/stop panel on top of the feed.
+• Journal with thumbnails that you can share.
+
+<b>AI providers</b>
+Gemini, Groq, Mistral, OpenRouter (free API keys), Grok and Claude (paid API keys). Your key is stored only on your phone.
+
+<b>Notes</b>
+• Requires the official TikTok app (TikTok, TikTok Lite and Douyin are supported).
+• Uses the Android Accessibility Service API only during a session that you start yourself, to swipe, open comments and read the on-screen text of the video.
+• On-screen text, comments and frames are sent only to the AI provider you choose. The journal stays on your phone. Nothing is sent to the developer.
+• The app never likes, comments or follows.
+
+Not affiliated with TikTok or ByteDance.

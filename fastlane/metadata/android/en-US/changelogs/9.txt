@@ -1,0 +1,1 @@
+First F-Droid release: AI scrolls the feed, reads comments and writes summaries, storyboard of up to 9 frames, gibberish protection, error report.

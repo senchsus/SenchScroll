@@ -1,0 +1,31 @@
+AntiFeatures:
+  NonFreeDep:
+    en-US: Requires the proprietary TikTok app to work.
+  NonFreeNet:
+    en-US: Sends on-screen text, comments and video frames to a proprietary AI service
+      chosen by the user (Google Gemini, Groq, Mistral, OpenRouter, xAI or Anthropic).
+Categories:
+  - Multimedia
+License: GPL-3.0-or-later
+AuthorName: senchsus
+AuthorEmail: idaboba353@gmail.com
+SourceCode: https://github.com/senchsus/SenchScroll
+IssueTracker: https://github.com/senchsus/SenchScroll/issues
+
+AutoName: SenchScroll
+
+RepoType: git
+Repo: https://github.com/senchsus/SenchScroll.git
+
+Builds:
+  - versionName: '1.8'
+    versionCode: 9
+    commit: v1.8
+    subdir: app
+    gradle:
+      - yes
+
+AutoUpdateMode: Version
+UpdateCheckMode: Tags
+CurrentVersion: '1.8'
+CurrentVersionCode: 9

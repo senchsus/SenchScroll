@@ -16,22 +16,30 @@ android {
         versionCode = 9
         versionName = "1.8"
     }
+    // Ключ подписи хранится только у автора (в репозиторий не попадает).
+    // F-Droid собирает без него и подписывает своим ключом.
+    val keyFile = file("senchscroll.jks")
     signingConfigs {
-        create("release") {
-            storeFile = file("senchscroll.jks")
+        if (keyFile.exists()) create("release") {
+            storeFile = keyFile
             storePassword = "senchscroll"
             keyAlias = "sench"
             keyPassword = "senchscroll"
         }
+    }
+    // F-Droid не принимает зашифрованный блок с зависимостями от Google
+    dependenciesInfo {
+        includeInApk = false
+        includeInBundle = false
     }
     buildTypes {
         release {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-            signingConfig = signingConfigs.getByName("release")
+            signingConfigs.findByName("release")?.let { signingConfig = it }
         }
-        debug { signingConfig = signingConfigs.getByName("release") }
+        debug { signingConfigs.findByName("release")?.let { signingConfig = it } }
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
