@@ -5,7 +5,7 @@
 <img src="fastlane/metadata/android/ru-RU/images/phoneScreenshots/1.png" width="240"> <img src="fastlane/metadata/android/ru-RU/images/phoneScreenshots/3.png" width="240">
 
 ## Установка
-1. Скачай `SenchScroll.apk` из [Releases](https://github.com/senchsus/SenchScroll/releases) и установи. Если приложение уже вышло в F-Droid, можно поставить оттуда.
+1. Скачай `SenchScroll.apk` из [Releases](https://github.com/senchsus/SenchScroll/releases) и установи. Новая версия ставится поверх старой, журнал сохраняется.
 2. Возьми бесплатный ключ Gemini: https://aistudio.google.com/apikey. Вставь его в «Настройки».
 3. Включи спецвозможность: Настройки телефона → Спец. возможности → Установленные приложения → SenchScroll.
    Если переключатель серый (Android 13 и новее), открой «О приложении» SenchScroll → ⋮ → «Разрешить ограниченные настройки».
