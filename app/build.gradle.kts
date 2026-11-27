@@ -1,4 +1,5 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import java.util.Properties
 
 plugins {
     id("com.android.application")
@@ -16,15 +17,19 @@ android {
         versionCode = 13
         versionName = "1.12"
     }
-    // Ключ подписи хранится только у автора (в репозиторий не попадает).
-    // F-Droid собирает без него и подписывает своим ключом.
-    val keyFile = file("senchscroll.jks")
+    // Ключ подписи и пароль к нему хранятся только у автора (app/keystore.properties, в репозиторий не попадают).
+    // Без них проект собирается неподписанным.
+    val keyProps = Properties().apply {
+        val f = file("keystore.properties")
+        if (f.exists()) f.inputStream().use { load(it) }
+    }
+    val keyFile = keyProps.getProperty("storeFile")?.let { file(it) }
     signingConfigs {
-        if (keyFile.exists()) create("release") {
+        if (keyFile != null && keyFile.exists()) create("release") {
             storeFile = keyFile
-            storePassword = "senchscroll"
-            keyAlias = "sench"
-            keyPassword = "senchscroll"
+            storePassword = keyProps.getProperty("storePassword")
+            keyAlias = keyProps.getProperty("keyAlias")
+            keyPassword = keyProps.getProperty("keyPassword")
         }
     }
     // F-Droid не принимает зашифрованный блок с зависимостями от Google
